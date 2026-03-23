@@ -12,7 +12,7 @@ Pernah gak sih teman-teman kebingungan hari pertama UTS/UAS itu matkul apa dikar
 
 - **Smart Extraction**: Menggunakan AI Google Gemini (2.5 Flash) untuk mendeteksi, mengekstraksi, dan merapikan data jadwal secara otomatis.
 - **Auto-Sorting**: Jadwal otomatis diurutkan dari waktu terdekat berdasarkan *timestamp*.
-- **Export ke CSV & Excel**: Unduh hasil ekstraksi langsung ke format `.csv` atau `.xlsx` dengan satu klik.
+- **Export Lengkap**: Unduh hasil ekstraksi langsung ke format **CSV**, **Excel (.xlsx)**, atau sankronisasi langsung jadwal ke kalender harian dengan opsi ekspor **iCal (.ics)**.
 - **Performa Tinggi**: Tidak menggunakan library SDK AI/PDF yang berat, file langsung diolah ke dalam format Base64 dan diproses melalui _Native Fetch API_.
 - **UI Modern**: Antarmuka _drag-and-drop_ yang menarik didukung oleh Tailwind CSS dan Shadcn UI.
 
@@ -73,7 +73,19 @@ Sebelum menggunakan aplikasi, pastikan Anda telah memiliki file jadwal ujian (PD
 3. Klik tombol **"Proses Jadwal"**.
 4. Tunggu beberapa detik saja hingga AI selesai bekerja mengekstrak tabel jadwal.
 5. Selesai! Jadwal konversi akan langsung ditampilkan dalam bentuk tabel ringkas dan telah diurutkan berdasarkan waktu pelaksanaan secara otomatis.
-6. (Opsional) Anda dapat menyimpannya dengan mengklik tombol unduh **CSV** atau **XLSX (Excel)**.
+6. Anda dapat menyimpannya dengan mengklik tombol unduh **CSV**, **XLSX (Excel)**, atau **ICS**.
+
+### 3. Cara Menambahkan Jadwal ke Kalender (Google Calendar / Apple Calendar)
+Kini Anda bisa langsung memasukkan seluruh jadwal ke dalam aplikasi kalender pribadi dan mendapatkan alarm pengingat!
+1. Setelah tabel hasil ujian muncul di aplikasi, klik tombol **ICS**. File `jadwal-ujian.ics` akan otomatis diunduh ke perangkat Anda.
+2. Cukup klik dua kali (*double-click*) atau buka file `.ics` tersebut. Aplikasi kalender bawaan perangkat (seperti Google Calendar/Outlook/Apple Calendar) akan mendeteksi file secara otomatis.
+3. Klik **Simpan** atau **Import Semua Acara** pada jendela peringatan yang muncul. Selesai! Jadwal ujian lengkap dengan SKS, kode matkul, dan detail ruangan berhasil ditambahkan.
+
+<div align="center">
+  <img src="./public/ics1.png" alt="Tombol Unduh ICS Screenshot" width="45%">
+  &nbsp;&nbsp;
+  <img src="./public/ics2.png" alt="Import Jadwal ke Calendar" width="45%">
+</div>
 
 ## Lisensi dan Kontribusi
 

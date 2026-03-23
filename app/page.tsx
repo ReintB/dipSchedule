@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent, DragEvent, MouseEvent } from "react";
-import { UploadCloud, Download, Loader2, X, RefreshCcw, FileText } from "lucide-react";
+import { UploadCloud, Download, Loader2, X, RefreshCcw, FileText, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -185,6 +185,66 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
     toast.success("File Excel berhasil diunduh");
   };
 
+  const handleDownloadICS = () => {
+    if (!data.length) return;
+
+    let icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//dipSchedule//ID",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH"
+    ].join("\n") + "\n";
+
+    data.forEach((event, index) => {
+      const startDate = event.timestamp ? new Date(event.timestamp) : new Date();
+      
+      let endDate = new Date(startDate.getTime() + 100 * 60000);
+      const timeMatch = event.tanggalWaktu.match(/-\s*(\d{1,2})[:.](\d{2})/);
+      
+      if (timeMatch) {
+         endDate = new Date(startDate);
+         endDate.setHours(parseInt(timeMatch[1], 10));
+         endDate.setMinutes(parseInt(timeMatch[2], 10));
+         endDate.setSeconds(0);
+         
+         // Fix jika format cross day (lewat tengah malam)
+         if (endDate < startDate) {
+            endDate = new Date(endDate.getTime() + 24 * 3600000);
+         }
+      }
+
+      // 3. Format Date ke format ICS UTC (YYYYMMDDTHHMMSSZ)
+      const formatDate = (date: Date) => {
+        return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+      };
+
+      icsContent += [
+        "BEGIN:VEVENT",
+        `UID:dipschedule-${index}-${Date.now()}@domain.com`,
+        `DTSTAMP:${formatDate(new Date())}`,
+        `DTSTART:${formatDate(startDate)}`,
+        `DTEND:${formatDate(endDate)}`,
+        `SUMMARY:Ujian ${event.mataKuliah}`,
+        `DESCRIPTION:SKS: ${event.sks}\\nKode: ${event.kode}\\nWaktu: ${event.tanggalWaktu}`,
+        `LOCATION:${event.ruang}`,
+        "STATUS:CONFIRMED",
+        "END:VEVENT"
+      ].join("\n") + "\n";
+    });
+
+    icsContent += "END:VCALENDAR";
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "jadwal-ujian.ics";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("File iCal (Google Calendar) berhasil diunduh");
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -197,6 +257,9 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
           </Button>
           <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadXLSX}>
             <Download className="w-4 h-4 mr-2" /> XLSX
+          </Button>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadICS}>
+            <CalendarDays className="w-4 h-4 mr-2" /> ICS
           </Button>
           <Button variant="ghost" onClick={onReset} className="w-full sm:w-auto text-muted-foreground hover:text-foreground">
             <RefreshCcw className="w-4 h-4 mr-2" /> Reset
