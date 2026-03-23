@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
@@ -156,6 +157,45 @@ function UploadCard({
   );
 }
 
+function TableSkeleton() {
+  return (
+    <div className="w-full max-w-3xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <Skeleton className="h-8 w-48" />
+        <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+          <Skeleton className="h-10 w-20 sm:w-24" />
+          <Skeleton className="h-10 w-20 sm:w-24" />
+          <Skeleton className="h-10 w-20 sm:w-24" />
+        </div>
+      </div>
+      <div className="border rounded-md bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+              <TableHead><Skeleton className="h-4 w-16" /></TableHead>
+              <TableHead><Skeleton className="h-4 w-12" /></TableHead>
+              <TableHead><Skeleton className="h-4 w-20" /></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell><Skeleton className="h-4 w-[120px] lg:w-[150px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[180px] lg:w-[200px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
 function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => void }) {
   const getExportData = () => data.map(({ tanggalWaktu, mataKuliah, kode, sks, ruang }) => ({
     "Waktu Ujian": tanggalWaktu,
@@ -208,13 +248,11 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
          endDate.setMinutes(parseInt(timeMatch[2], 10));
          endDate.setSeconds(0);
          
-         // Fix jika format cross day (lewat tengah malam)
          if (endDate < startDate) {
             endDate = new Date(endDate.getTime() + 24 * 3600000);
          }
       }
 
-      // 3. Format Date ke format ICS UTC (YYYYMMDDTHHMMSSZ)
       const formatDate = (date: Date) => {
         return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
       };
@@ -350,7 +388,9 @@ export default function Home() {
           onProcess={handleProcess} 
         />
 
-        {data && (
+        {loading && <TableSkeleton />}
+
+        {!loading && data && (
           <ResultTable data={data} onReset={handleReset} />
         )}
       </main>
