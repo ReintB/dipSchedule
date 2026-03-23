@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# dipSchedule
 
-## Getting Started
+> **Konverter cerdas untuk mahasiswa/i Undip:** Ubah PDF jadwal UTS dan UAS menjadi tabel rapi dan terurut dalam hitungan detik.
 
-First, run the development server:
+![Tampilan Awal dipSchedule](./public/dipSchedule.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Pernah gak sih teman-teman kebingungan hari pertama UTS/UAS itu matkul apa dikarenakan tabel jadwal UTS/UAS hasil unduhan dari SIAP Akademik tidak berurutan? Baca manual bingung, konversi ke file excel kemudian disortir butuh waktu lama... tenang, **dipSchedule** hadir untuk membantu teman-teman membaca tabel jadwal UTS/UAS dengan jauh lebih mudah!
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**dipSchedule** adalah aplikasi web berbasis AI yang mempermudah mahasiswa dalam membaca, merapikan, dan mengekspor jadwal ujian mereka dari file PDF (hasil unduhan sistem akademik Undip/SIAP Undip) menjadi format tabel, CSV, atau Excel (XLSX) yang mudah dibaca.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Fitur Utama
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Smart Extraction**: Menggunakan AI Google Gemini (2.5 Flash) untuk mendeteksi, mengekstraksi, dan merapikan data jadwal secara otomatis.
+- **Auto-Sorting**: Jadwal otomatis diurutkan dari waktu terdekat berdasarkan *timestamp*.
+- **Export ke CSV & Excel**: Unduh hasil ekstraksi langsung ke format `.csv` atau `.xlsx` dengan satu klik.
+- **Performa Tinggi**: Tidak menggunakan library SDK AI/PDF yang berat, file langsung diolah ke dalam format Base64 dan diproses melalui _Native Fetch API_.
+- **UI Modern**: Antarmuka _drag-and-drop_ yang menarik didukung oleh Tailwind CSS dan Shadcn UI.
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **AI Model**: Google Gemini (via Native REST API)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Radix UI / Shadcn UI](https://ui.shadcn.com/)
+- **Data Export**: [PapaParse](https://www.papaparse.com/) (CSV) & [SheetJS (xlsx)](https://sheetjs.com/) (Excel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Persyaratan (Prerequisites)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js (Versi 18 atau terbaru)
+- API Key Google Gemini (Dapatkan gratis di [Google AI Studio](https://aistudio.google.com/))
 
-## Deploy on Vercel
+## Instalasi dan Menjalankan Proyek
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Clone repositori ini** (atau _download_ proyeknya):
+   ```bash
+   git clone https://github.com/ReintB/dipSchedule.git
+   cd dipschedule
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Instal dependensi**:
+   ```bash
+   npm install
+   ```
+
+3. **Konfigurasi Environment Variable (*.env.local*)**:
+   Buat file bernama `.env.local` di *root/folder* utama proyek Anda dan masukkan API Key Gemini yang Anda miliki:
+   ```env
+   GEMINI_API_KEY=masukkan_api_key_disini
+   ```
+
+4. **Jalankan Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000) di browser untuk melihat hasilnya.
+
+## Tata Cara Penggunaan
+
+### 1. Cara Mengunduh Kartu Ujian (SSO Undip)
+Sebelum menggunakan aplikasi, pastikan Anda telah memiliki file jadwal ujian (PDF).
+1. Buka laman [Login SSO Undip](https://sso.undip.ac.id/auth/user/login).
+2. Masukkan kredensial Anda (NIM/NIP/Username/Email resmi Undip) lalu klik **Login**.
+3. Masukkan password akun SSO Anda.
+4. Pada dashboard utama, pilih menu **Akademik & Penelitian**.
+5. Pilih submenu/halaman **SIAP**, lalu klik bagian **Akademik**.
+6. Pada halaman `IRS-Index`, navigasikan ke *tab* **IRS**.
+7. Pilih semester aktif yang sedang Anda jalani.
+8. Klik tombol **Cetak Kartu UTS** atau **Cetak Kartu UAS** untuk menyimpan berkas PDF ujian ke perangkat Anda.
+
+### 2. Cara Mengkonversi Jadwal (di dipSchedule)
+1. Buka situs web resmi kami di: **[https://dip-schedule.vercel.app/](https://dip-schedule.vercel.app/)**
+2. *Drag and drop* atau klik area unggah untuk memasukkan file PDF Kartu UTS/UAS yang baru saja Anda unduh.
+3. Klik tombol **"Proses Jadwal"**.
+4. Tunggu beberapa detik saja hingga AI selesai bekerja mengekstrak tabel jadwal.
+5. Selesai! Jadwal konversi akan langsung ditampilkan dalam bentuk tabel ringkas dan telah diurutkan berdasarkan waktu pelaksanaan secara otomatis.
+6. (Opsional) Anda dapat menyimpannya dengan mengklik tombol unduh **CSV** atau **XLSX (Excel)**.
+
+## Lisensi dan Kontribusi
+
+Dibuat oleh [ReintB](https://github.com/ReintB/dipSchedule).  
+Kontribusi dan *issue* sangat diterima di Repositori GitHub!  
+Jika Anda menyukai proyek ini, jangan lupa berikan ⭐ (Star) di GitHub!
