@@ -14,17 +14,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
-// --- Mock Data & Types ---
-const dummyData = [
-  { id: 1, tanggalWaktu: "31 Maret 2026 13:15", mataKuliah: "Mekanika Fluida", kode: "VTE2624208", sks: "2", ruang: "E 2.3 SV TBL" },
-  { id: 2, tanggalWaktu: "01 April 2026 08:00", mataKuliah: "Matematika Teknik", kode: "VTE2624201", sks: "3", ruang: "B 1.1 SV" },
-  { id: 3, tanggalWaktu: "02 April 2026 10:00", mataKuliah: "Elektronika Digital", kode: "VTE2624205", sks: "2", ruang: "E 2.4 SV TBL" },
-];
+type ScheduleItem = {
+  id?: number;
+  tanggalWaktu: string;
+  mataKuliah: string;
+  kode: string;
+  sks: string;
+  ruang: string;
+  timestamp?: number;
+};
+type ScheduleData = ScheduleItem[];
 
-type ScheduleData = typeof dummyData;
-
-// --- Components ---
 function Header() {
   return (
     <header className="text-center space-y-4 mt-6 md:mt-12 mb-8 md:mb-12 shrink-0">
@@ -154,6 +157,34 @@ function UploadCard({
 }
 
 function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => void }) {
+  const getExportData = () => data.map(({ tanggalWaktu, mataKuliah, kode, sks, ruang }) => ({
+    "Waktu Ujian": tanggalWaktu,
+    "Mata Kuliah": mataKuliah,
+    "Kode": kode,
+    "SKS": sks,
+    "Ruang": ruang
+  }));
+
+  const handleDownloadCSV = () => {
+    const csv = Papa.unparse(getExportData());
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'jadwal-ujian.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("File CSV berhasil diunduh");
+  };
+
+  const handleDownloadXLSX = () => {
+    const worksheet = XLSX.utils.json_to_sheet(getExportData());
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jadwal Terurut");
+    XLSX.writeFile(workbook, "jadwal-ujian.xlsx");
+    toast.success("File Excel berhasil diunduh");
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -161,10 +192,10 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
           Hasil Konversi Jadwal
         </h2>
         <div className="flex gap-2 sm:gap-3 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-          <Button variant="outline" className="flex-1 sm:flex-none">
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadCSV}>
             <Download className="w-4 h-4 mr-2" /> CSV
           </Button>
-          <Button variant="outline" className="flex-1 sm:flex-none">
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadXLSX}>
             <Download className="w-4 h-4 mr-2" /> XLSX
           </Button>
           <Button variant="ghost" onClick={onReset} className="w-full sm:w-auto text-muted-foreground hover:text-foreground">
@@ -185,8 +216,8 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row) => (
-              <TableRow key={row.id}>
+            {data.map((row, i) => (
+              <TableRow key={row.id || i}>
                 <TableCell className="font-medium">{row.tanggalWaktu}</TableCell>
                 <TableCell>{row.mataKuliah}</TableCell>
                 <TableCell>{row.kode}</TableCell>
@@ -201,24 +232,41 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
   );
 }
 
-// --- Main Page ---
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<ScheduleData | null>(null);
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     if (!file) return;
 
     setLoading(true);
     toast.loading("Mengekstrak jadwal...", { id: "process-toast" });
 
-    // Simulasi parsing PDF
-    setTimeout(() => {
-      setData(dummyData);
-      setLoading(false);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/parse", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal mengekstrak PDF");
+      }
+
+      const rawData: ScheduleData = await response.json();
+      const sortedSchedules = rawData.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      setData(sortedSchedules);
       toast.success("Jadwal berhasil dikonversi!", { id: "process-toast" });
-    }, 1500);
+    } catch (error) {
+      console.error("Proses Error:", error);
+      toast.error("Gagal memproses PDF", { id: "process-toast" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
