@@ -9,6 +9,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Tidak ada file yang diunggah" }, { status: 400 });
     }
 
+    if (file.type !== "application/pdf") {
+      return NextResponse.json({ error: "Format file tidak didukung. Harap unggah file PDF." }, { status: 400 });
+    }
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB dalam bytes
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "Ukuran file terlalu besar. Maksimal ukuran file adalah 5MB." }, { status: 400 });
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const base64String = Buffer.from(arrayBuffer).toString("base64");
 
