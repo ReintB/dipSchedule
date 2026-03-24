@@ -182,11 +182,11 @@ function TableSkeleton() {
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell><Skeleton className="h-4 w-[120px] lg:w-[150px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[180px] lg:w-[200px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-30 lg:w-37.5" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-45 lg:w-50" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-25" /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -354,7 +354,19 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error("Gagal mengekstrak PDF");
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = null;
+        }
+        const errorMessage = errorData?.error || "Gagal mengekstrak PDF. Pastikan file valid.";
+        toast.error("Gagal memproses file", { 
+          id: "process-toast",
+          description: errorMessage,
+        });
+        setLoading(false);
+        return;
       }
 
       const rawData: ScheduleData = await response.json();
@@ -363,8 +375,11 @@ export default function Home() {
       setData(sortedSchedules);
       toast.success("Jadwal berhasil dikonversi!", { id: "process-toast" });
     } catch (error) {
-      console.error("Proses Error:", error);
-      toast.error("Gagal memproses PDF", { id: "process-toast" });
+      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";
+      toast.error("Gagal memproses file", { 
+        id: "process-toast",
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }

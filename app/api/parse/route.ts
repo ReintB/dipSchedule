@@ -13,10 +13,13 @@ export async function POST(req: Request) {
     const base64String = Buffer.from(arrayBuffer).toString("base64");
 
     const prompt = `
-      Kamu adalah asisten ekstraksi data cerdas. Ekstrak data tabel jadwal ujian dari dokumen PDF berikut ke dalam bentuk JSON Array of Objects murni. 
-      PENTING: Jangan gunakan markdown format seperti \`\`\`json. Langsung berikan array JSON-nya.
+      Kamu adalah asisten ekstraksi data cerdas. Evaluasi dan ekstrak data tabel jadwal ujian dari dokumen PDF berikut ke dalam bentuk JSON.
       
-      Setiap baris mata kuliah menjadi satu object. Properti yang WAJIB ada:
+      ATURAN PENTING:
+      1. Jika PDF ini BUKAN berisi jadwal ujian mahasiswa/akademik (contoh: bon belanja, makalah, presentasi, atau tidak ada tabel ujian sama sekali), HANYA kembalikan JSON persis seperti ini: {"error": "INVALID_DOCUMENT"}
+      2. Jika PDF VALID (berisi jadwal ujian UTS/UAS terlepas dari layoutnya), ekstrak jadwalnya dan kembalikan MURNI JSON Array of Objects (tanpa markdown \`\`\`json).
+      
+      Bagi data yang valid, setiap baris mata kuliah menjadi satu object. Properti yang WAJIB ada:
       - "kode" (string, contoh: "VTE2624208")
       - "mataKuliah" (string, contoh: "Praktikum Instrumentasi")
       - "sks" (string, contoh: "2")
@@ -56,7 +59,17 @@ export async function POST(req: Request) {
     let textOutput = data.candidates[0].content.parts[0].text;
     textOutput = textOutput.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
-    return NextResponse.json(JSON.parse(textOutput));
+    const parsedData = JSON.parse(textOutput);
+
+    // AI mendeteksi bahwa ini bukan file PDF akademik/jadwal
+    if (parsedData.error === "INVALID_DOCUMENT") {
+      return NextResponse.json(
+        { error: "File yang Anda unggah sepertinya bukan format Jadwal Ujian yang valid. Harap periksa kembali." },
+        { status: 422 }
+      );
+    }
+
+    return NextResponse.json(parsedData);
   } catch (error) {
     console.error("Native Fetch Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Gagal memproses dengan Native API";
