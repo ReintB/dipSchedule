@@ -119,7 +119,7 @@ function UploadCard({
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto shadow-sm shrink-0">
+    <Card className="w-full max-w-4xl mx-auto shadow-sm shrink-0">
       <CardHeader className="text-center">
         <CardTitle>Upload Jadwal</CardTitle>
         <CardDescription>Pilih file PDF jadwal ujian Anda untuk dikonversi.</CardDescription>
@@ -174,7 +174,7 @@ function UploadCard({
 
 function TableSkeleton() {
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-4xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <Skeleton className="h-8 w-48" />
         <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
