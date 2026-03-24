@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent, DragEvent, MouseEvent } from "react";
-import { UploadCloud, Download, Loader2, X, RefreshCcw, FileText, CalendarDays } from "lucide-react";
+import { UploadCloud, Download, Loader2, X, RefreshCcw, FileText, CalendarDays, User, BookOpen, GraduationCap, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +17,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type ScheduleItem = {
   id?: number;
   tanggalWaktu: string;
+  durasi?: string;
   mataKuliah: string;
   kode: string;
   sks: string;
@@ -28,6 +31,18 @@ type ScheduleItem = {
   timestamp?: number;
 };
 type ScheduleData = ScheduleItem[];
+
+type ScheduleMetadata = {
+  nama: string | null;
+  nim: string | null;
+  jenisUjian: string | null;
+  semester: string | null;
+};
+
+type ScheduleResponse = {
+  metadata: ScheduleMetadata;
+  jadwal: ScheduleData;
+};
 
 function Header() {
   return (
@@ -173,6 +188,7 @@ function TableSkeleton() {
           <TableHeader>
             <TableRow>
               <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead><Skeleton className="h-4 w-16" /></TableHead>
               <TableHead><Skeleton className="h-4 w-32" /></TableHead>
               <TableHead><Skeleton className="h-4 w-16" /></TableHead>
               <TableHead><Skeleton className="h-4 w-12" /></TableHead>
@@ -183,6 +199,7 @@ function TableSkeleton() {
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
                 <TableCell><Skeleton className="h-4 w-30 lg:w-37.5" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-45 lg:w-50" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-10" /></TableCell>
@@ -196,9 +213,10 @@ function TableSkeleton() {
   );
 }
 
-function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => void }) {
-  const getExportData = () => data.map(({ tanggalWaktu, mataKuliah, kode, sks, ruang }) => ({
+function ResultTable({ data, onReset }: { data: ScheduleResponse; onReset: () => void }) {
+  const getExportData = () => data.jadwal.map(({ tanggalWaktu, durasi, mataKuliah, kode, sks, ruang }) => ({
     "Waktu Ujian": tanggalWaktu,
+    "Durasi": durasi || "-",
     "Mata Kuliah": mataKuliah,
     "Kode": kode,
     "SKS": sks,
@@ -225,8 +243,36 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
     toast.success("File Excel berhasil diunduh");
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(16);
+    doc.text("Jadwal Ujian", 14, 20);
+    
+    // Metadata
+    doc.setFontSize(10);
+    let startY = 30;
+    if (data.metadata.nama) { doc.text(`Nama: ${data.metadata.nama}`, 14, startY); startY += 6; }
+    if (data.metadata.nim) { doc.text(`NIM: ${data.metadata.nim}`, 14, startY); startY += 6; }
+    if (data.metadata.jenisUjian) { doc.text(`Jenis Ujian: ${data.metadata.jenisUjian}`, 14, startY); startY += 6; }
+    if (data.metadata.semester) { doc.text(`Semester: ${data.metadata.semester}`, 14, startY); startY += 6; }
+
+    // Table
+    autoTable(doc, {
+      startY: startY + 4,
+      head: [["Waktu Ujian", "Durasi", "Mata Kuliah", "Kode", "SKS", "Ruang"]],
+      body: data.jadwal.map(row => [row.tanggalWaktu, row.durasi || "-", row.mataKuliah, row.kode, row.sks, row.ruang]),
+      theme: 'grid',
+      headStyles: { fillColor: [15, 23, 42] }, // Slate 900
+    });
+
+    doc.save("jadwal-ujian.pdf");
+    toast.success("File PDF berhasil diunduh");
+  };
+
   const handleDownloadICS = () => {
-    if (!data.length) return;
+    if (!data.jadwal.length) return;
 
     let icsContent = [
       "BEGIN:VCALENDAR",
@@ -236,7 +282,7 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
       "METHOD:PUBLISH"
     ].join("\n") + "\n";
 
-    data.forEach((event, index) => {
+    data.jadwal.forEach((event, index) => {
       const startDate = event.timestamp ? new Date(event.timestamp) : new Date();
       
       let endDate = new Date(startDate.getTime() + 100 * 60000);
@@ -284,7 +330,41 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-4 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-4xl mx-auto space-y-6 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {data.metadata && (Object.values(data.metadata).some(val => val !== null && val !== "")) && (
+        <Card className="bg-muted/30 border-muted">
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.metadata.nama && (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0"><User className="w-4 h-4" /></div>
+                  <div><p className="text-xs text-muted-foreground font-medium">Nama Mahasiswa</p><p className="font-semibold text-foreground">{data.metadata.nama}</p></div>
+                </div>
+              )}
+              {data.metadata.nim && (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0"><FileText className="w-4 h-4" /></div>
+                  <div><p className="text-xs text-muted-foreground font-medium">NIM</p><p className="font-semibold text-foreground">{data.metadata.nim}</p></div>
+                </div>
+              )}
+              {data.metadata.jenisUjian && (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0"><BookOpen className="w-4 h-4" /></div>
+                  <div><p className="text-xs text-muted-foreground font-medium">Jenis Ujian</p><p className="font-semibold text-foreground">{data.metadata.jenisUjian}</p></div>
+                </div>
+              )}
+              {data.metadata.semester && (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0"><GraduationCap className="w-4 h-4" /></div>
+                  <div><p className="text-xs text-muted-foreground font-medium">Semester</p><p className="font-semibold text-foreground">{data.metadata.semester}</p></div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
           Hasil Konversi Jadwal
@@ -295,6 +375,9 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
           </Button>
           <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadXLSX}>
             <Download className="w-4 h-4 mr-2" /> XLSX
+          </Button>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadPDF}>
+            <FileDown className="w-4 h-4 mr-2" /> PDF
           </Button>
           <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleDownloadICS}>
             <CalendarDays className="w-4 h-4 mr-2" /> ICS
@@ -310,6 +393,7 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
           <TableHeader>
             <TableRow>
               <TableHead>Waktu Ujian</TableHead>
+              <TableHead>Durasi</TableHead>
               <TableHead>Mata Kuliah</TableHead>
               <TableHead>Kode</TableHead>
               <TableHead>SKS</TableHead>
@@ -317,9 +401,10 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row, i) => (
+            {data.jadwal.map((row, i) => (
               <TableRow key={row.id || i}>
                 <TableCell className="font-medium">{row.tanggalWaktu}</TableCell>
+                <TableCell>{row.durasi || "-"}</TableCell>
                 <TableCell>{row.mataKuliah}</TableCell>
                 <TableCell>{row.kode}</TableCell>
                 <TableCell>{row.sks}</TableCell>
@@ -336,7 +421,7 @@ function ResultTable({ data, onReset }: { data: ScheduleData; onReset: () => voi
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [data, setData] = useState<ScheduleData | null>(null);
+  const [data, setData] = useState<ScheduleResponse | null>(null);
 
   const handleProcess = async () => {
     if (!file) return;
@@ -369,10 +454,18 @@ export default function Home() {
         return;
       }
 
-      const rawData: ScheduleData = await response.json();
-      const sortedSchedules = rawData.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      const rawResponse: ScheduleResponse = await response.json();
+      
+      if (!rawResponse.jadwal) {
+        throw new Error("Format respons tidak valid. Pastikan file adalah jadwal yang benar.");
+      }
 
-      setData(sortedSchedules);
+      const sortedSchedules = rawResponse.jadwal.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      setData({
+        metadata: rawResponse.metadata,
+        jadwal: sortedSchedules
+      });
       toast.success("Jadwal berhasil dikonversi!", { id: "process-toast" });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";

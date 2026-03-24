@@ -22,19 +22,30 @@ export async function POST(req: Request) {
     const base64String = Buffer.from(arrayBuffer).toString("base64");
 
     const prompt = `
-      Kamu adalah asisten ekstraksi data cerdas. Evaluasi dan ekstrak data tabel jadwal ujian dari dokumen PDF berikut ke dalam bentuk JSON.
+      Kamu adalah asisten ekstraksi data cerdas. Evaluasi dan ekstrak data tabel jadwal ujian beserta informasi mahasiswanya dari dokumen PDF berikut ke dalam bentuk JSON.
       
       ATURAN PENTING:
       1. Jika PDF ini BUKAN berisi jadwal ujian mahasiswa/akademik (contoh: bon belanja, makalah, presentasi, atau tidak ada tabel ujian sama sekali), HANYA kembalikan JSON persis seperti ini: {"error": "INVALID_DOCUMENT"}
-      2. Jika PDF VALID (berisi jadwal ujian UTS/UAS terlepas dari layoutnya), ekstrak jadwalnya dan kembalikan MURNI JSON Array of Objects (tanpa markdown \`\`\`json).
-      
-      Bagi data yang valid, setiap baris mata kuliah menjadi satu object. Properti yang WAJIB ada:
-      - "kode" (string, contoh: "VTE2624208")
-      - "mataKuliah" (string, contoh: "Praktikum Instrumentasi")
-      - "sks" (string, contoh: "2")
-      - "ruang" (string, contoh: "E 2.3 SV TBL")
-      - "tanggalWaktu" (string, contoh: "31 Maret 2026 13:15:00-14:45:00")
-      - "timestamp" (number, konversi waktu mulai ujian ke epoch timestamp milliseconds)
+      2. Jika PDF VALID (berisi jadwal ujian UTS/UAS), ekstrak jadwalnya dan kembalikan MURNI JSON Object (tanpa markdown \`\`\`json) dengan format seperti ini:
+      {
+        "metadata": {
+          "nama": "Nama lengkap mahasiswa (jika ada, jika tidak kosongkan atau null)",
+          "nim": "NIM mahasiswa (jika ada, jika tidak kosongkan atau null)",
+          "jenisUjian": "Cari tahu apakah ini 'Ujian Tengah Semester (UTS)' atau 'Ujian Akhir Semester (UAS)' berdasarkan judul/header dokumen",
+          "semester": "Semester yang sedang berjalan (contoh: 'Genap 2023/2024' atau 'Gasal 2024/2025' jika ada di header)"
+        },
+        "jadwal": [
+          {
+            "kode": "string (contoh: 'VTE2624208')",
+            "mataKuliah": "string (contoh: 'Praktikum Instrumentasi')",
+            "sks": "string (contoh: '2')",
+            "ruang": "string (contoh: 'E 2.3 SV TBL')",
+            "tanggalWaktu": "string (gabungan tanggal dan jam. contoh: '31 Maret 2026 13:15:00-14:45:00')",
+            "durasi": "string (hitung selisih waktu mulai dan selesai pengerjaan lalu format ke bentuk Menit atau Jam, contoh: '90 Menit' atau '2 Jam')",
+            "timestamp": number (konversi waktu mulai ujian ke epoch timestamp milliseconds untuk keperluan sorting)
+          }
+        ]
+      }
     `;
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -70,7 +81,6 @@ export async function POST(req: Request) {
 
     const parsedData = JSON.parse(textOutput);
 
-    // AI mendeteksi bahwa ini bukan file PDF akademik/jadwal
     if (parsedData.error === "INVALID_DOCUMENT") {
       return NextResponse.json(
         { error: "File yang Anda unggah sepertinya bukan format Jadwal Ujian yang valid. Harap periksa kembali." },
