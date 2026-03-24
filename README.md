@@ -2,11 +2,26 @@
 
 > **Konverter cerdas untuk mahasiswa/i Undip:** Ubah PDF jadwal UTS dan UAS menjadi tabel rapi dan terurut dalam hitungan detik.
 
-![Tampilan Awal dipSchedule](./public/dipSchedule.png)
+**Coba Langsung / Live Demo:** [**dip-schedule.vercel.app**](https://dip-schedule.vercel.app/)
+
+![Tampilan Awal dipSchedule](./public/dipscheduleMain.png)
 
 Pernah gak sih teman-teman kebingungan hari pertama UTS/UAS itu matkul apa dikarenakan tabel jadwal UTS/UAS hasil unduhan dari SIAP Akademik tidak berurutan? Baca manual bingung, konversi ke file excel kemudian disortir butuh waktu lama... tenang, **dipSchedule** hadir untuk membantu teman-teman membaca tabel jadwal UTS/UAS dengan jauh lebih mudah!
 
 **dipSchedule** adalah aplikasi web berbasis AI yang mempermudah mahasiswa dalam membaca, merapikan, dan mengekspor jadwal ujian mereka dari file PDF (hasil unduhan sistem akademik Undip/SIAP Undip) menjadi format tabel, CSV, atau Excel (XLSX) yang mudah dibaca.
+
+## Daftar Isi
+- [Fitur Utama](#fitur-utama)
+- [Tech Stack](#tech-stack)
+- [Persyaratan (Prerequisites)](#persyaratan-prerequisites)
+- [Instalasi dan Menjalankan Proyek](#instalasi-dan-menjalankan-proyek)
+- [Tata Cara Penggunaan](#tata-cara-penggunaan)
+  - [1. Cara Mengunduh Kartu Ujian (SSO Undip)](#1-cara-mengunduh-kartu-ujian-sso-undip)
+  - [2. Cara Mengkonversi Jadwal (di dipSchedule)](#2-cara-mengkonversi-jadwal-di-dipschedule)
+  - [3. Cara Menambahkan Jadwal ke Kalender (Google Calendar / Apple Calendar)](#3-cara-menambahkan-jadwal-ke-kalender-google-calendar--apple-calendar)
+- [Galeri & Tampilan Aplikasi](#galeri--tampilan-aplikasi)
+- [Disclaimer](#disclaimer)
+- [Lisensi dan Kontribusi](#lisensi-dan-kontribusi)
 
 ## Fitur Utama
 
@@ -86,6 +101,44 @@ Kini Anda bisa langsung memasukkan seluruh jadwal ke dalam aplikasi kalender pri
   &nbsp;&nbsp;
   <img src="./public/ics2.png" alt="Import Jadwal ke Calendar" width="45%">
 </div>
+
+## Galeri & Tampilan Aplikasi
+
+Berikut adalah dokumentasi tangkapan layar dari fitur dan penanganan error pada **dipSchedule**:
+
+### 1. Tampilan Awal: Menambahkan File
+Kondisi tampilan web untuk *upload* atau *drag & drop* file PDF jadwal.
+<br>
+<img src="./public/01-tambah-file.png" alt="Tampilan awal menambahkan file">
+
+### 2. Proses Ekstrak
+Tampilan saat sistem mengambil dan mengekstrak data dari file PDF menggunakan AI.
+<br>
+<img src="./public/02-proses-ekstrak.png" alt="Proses ekstraksi AI">
+
+### 3. Jadwal Berhasil Dikonversi
+Tampilan web saat jadwal berhasil dikonversi menjadi tabel terurut rapi.
+<br>
+<img src="./public/03-konversi-berhasil.png" alt="Jadwal berhasil dikonversi">
+
+### 4. Tampilan Jadwal dalam PDF
+Kondisi fitur pratinjau (preview) di mana tabel jadwal dan PDF aslinya ditampilkan.
+<br>
+<img src="./public/04-tampilan-pdf.png" alt="Tampilan hasil jadwal PDF">
+
+### 5. Kondisi File Bukan PDF
+Pesan kesalahan (error) pada web jika pengguna mengunggah file yang bukan berformat PDF.
+<br>
+<img src="./public/05-error-bukan-pdf.png" alt="Kondisi jika file yang diupload bukan PDF">
+
+### 6. Kondisi File PDF Bukan Jadwal Ujian Undip
+Pesan kesalahan (error) pada web jika file PDF yang diunggah bukan kartu/jadwal UTS/UAS dari Undip.
+<br>
+<img src="./public/06-error-bukan-jadwal.png" alt="Kondisi jika file PDF bukan dari SIAP Undip">
+
+## Disclaimer
+
+**dipSchedule** dikembangkan secara independen dan **bukan merupakan aplikasi resmi** dari Universitas Diponegoro (Undip). Aplikasi ini menggunakan teknologi AI untuk mengekstraksi jadwal. Meskipun telah dioptimalkan agar akurat, selalu ada sedikit kemungkinan keterbatasan pembacaan teks pada model AI. **Pengguna disarankan untuk tetap mencocokkan jadwal hasil konversi dengan versi asli/PDF dari SIAP Undip.**
 
 ## Lisensi dan Kontribusi
 
